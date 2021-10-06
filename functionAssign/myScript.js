@@ -1,4 +1,4 @@
-
+// Question 1
 function myfunct(name, method_name){
     method_name(name);
 }
