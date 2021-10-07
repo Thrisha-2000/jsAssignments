@@ -1,4 +1,4 @@
-// Question 2
+//Question 2
 
 function callOther(){
     let firstName = document.getElementById("first").value;
@@ -7,6 +7,7 @@ function callOther(){
     document.getElementById("display").innerHTML = text;
 }
 
-const fullName = (firstName, lastName) => (firstName[0] + lastName[0]);
+const fullName = (firstName, lastName) => (firstName.charAt(0) + lastName.charAt(0));
+
 
 
