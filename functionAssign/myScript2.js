@@ -8,6 +8,3 @@ function callOther(){
 }
 
 const fullName = (firstName, lastName) => (firstName.charAt(0) + lastName.charAt(0));
-
-
-
