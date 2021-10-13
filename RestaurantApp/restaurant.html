@@ -1,0 +1,284 @@
+
+
+<html>
+    <head>
+        <title>Restaurant App</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700" rel="stylesheet">
+        <link rel="stylesheet" href="styleRestaurant.css">
+        <!-- <script src="restaurantJS.js"></script> -->
+    </head>
+
+    <body>
+        <section class="table-section">
+            <div class="table-header">
+                <p class="content">TABLE</p>
+            </div>
+            <input type="text" id="search-table" class="search-table" onkeyup="tableFunction()" placeholder="  Search table name">
+            <img src="images/magnifying-glass-solid.svg" class="search-table-icon">
+            <div id="table" class="tables">
+              
+            </div>
+        </section>
+        
+        <div class="popup">
+          <div class="popup-content">
+            <img src="images/xmark-solid.svg" alt="Close" class="close" onclick="closeModal()">
+            <div id="order-details"></div>
+            
+          </div>
+        </div>
+
+        <section class="menu-section">
+            <div class="menu-header">
+                <p class="content">MENU</p>
+            </div>
+            <input type="text" id="search-item" class="search-menu" onkeyup="menuFunction()" placeholder="  Search item name or course name">
+            <img src="images/magnifying-glass-solid.svg" class="search-menu-icon">
+
+            <div class="items" id="myMenu"></div>
+        </section>
+
+    </body>
+
+    <script>
+      var text="", i;
+      for (i=1; i<=10 ; i++){
+        text = text + "<div class='card type tablecolor' style='width: 18rem;'><div id='t"+i+"' class='card-body' onclick='getModal(this.id)'><h5 class='card-title'>Table - "+i+"</h5></div></div>";
+      }
+      document.getElementById("table").innerHTML = text;
+
+      function getModal(id){
+      
+        console.log(id);
+        document.querySelector(".popup").style.display = "flex";
+        var text = "",obj,i=1;
+        text += "<table><thead><tr><th>S.No</th><th>Item Name</th><th>Price</th><th>Quantity</th><th></th></tr></thead><tbody>";
+
+        const array = JSON.parse(sessionStorage.getItem(id));
+        var tableId = id;
+        console.log(tableId);
+        var sum = 0;
+        for (item of array){
+          console.log(item);
+          text += "<tr>"+
+                    "<td>"+i+"</td>"+
+                    "<td>"+item.name+"</td>"+
+                    "<td id='price_"+i+"'>"+item.price*item.qty+"</td>"+
+                    '<td><input type="number" min="1" class="width-qty" value="'+item.qty+'" onchange="changePrice('+tableId+',this.value,'+i+')"></td>'+
+                    "<td><img src='images/trash-solid.svg' class='trash' onclick='deleteItem("+tableId+","+i+")'></td>"+
+                  "</tr>";
+          i++;
+          sum += item.price*item.qty;
+        }
+      
+        
+        text += "</tbody><tfoot><tr><td></td><th>Total:</th><td id='total' class='total'>"+sum+"</td></tr></tfoot></table><button type='button' class='btn btn-success' onclick='generateBill("+tableId+")'>Generate Bill</button>";
+        document.getElementById("order-details").innerHTML = text;
+      }
+
+      function closeModal(){
+        document.querySelector(".popup").style.display = "none";
+      }
+
+      function changePrice(tableId,qty,i){
+        console.log(tableId.id);
+        
+        const array = JSON.parse(sessionStorage.getItem(tableId.id));
+       
+        array[i-1].qty = qty;
+       
+        sessionStorage.setItem(tableId.id,JSON.stringify(array));
+
+        priceId = "price_"+i;
+
+        let price_before = Number(document.getElementById(priceId).innerHTML);
+        document.getElementById(priceId).innerHTML = Number(array[i-1].price)*qty;
+        let price_after = Number(document.getElementById(priceId).innerHTML);
+        let difference = price_after-price_before;
+        document.getElementById("total").innerHTML = Number(document.getElementById("total").innerHTML) + difference;
+        
+      }
+
+      function deleteItem(tableId,i){
+        var tId = tableId.id;
+        const array = JSON.parse(sessionStorage.getItem(tId));
+        var index = i-1;
+        array.splice(index,1);
+        if (array.length == 0){
+          tableId.classList.remove('reservedcolor');
+          tableId.classList.add('tablecolor');
+        }
+        sessionStorage.setItem(tId,JSON.stringify(array));
+        getModal(tId);
+      }
+
+      function generateBill(tableId){
+        var tId = tableId.id;
+        document.querySelector(".popup").style.display = "flex";
+        var text = "",i=1;
+        text += "<table><thead><tr><th>S.No</th><th>Item Name</th><th>Price</th><th>Quantity</th></tr></thead><tbody>";
+
+        const array = JSON.parse(sessionStorage.getItem(tId));
+        
+        var sum = 0;
+        for (item of array){
+          console.log(item);
+          text += "<tr>"+
+                    "<td>"+i+"</td>"+
+                    "<td>"+item.name+"</td>"+
+                    "<td id='price_"+i+"'>"+item.price*item.qty+"</td>"+
+                    "<td>"+item.qty+"</td>"+
+                  "</tr>";
+          i++;
+          sum += item.price*item.qty;
+        }
+      
+        
+        text += "</tbody><tfoot><tr><td></td><th>Total:</th><td id='total' class='total'>"+sum+"</td></tr></tfoot></table><br><p class='feedback'>THANK YOU FOR VISITING OUR RESTAURANT</p>";
+        
+        document.getElementById("order-details").innerHTML = text;
+        while (array.length){
+          array.pop();
+        }
+        sessionStorage.setItem(tId,JSON.stringify(array));
+        tableId.classList.remove('reservedcolor');
+        tableId.classList.add('tablecolor');
+        
+      }
+
+      function Item(name, price, type, imgsrc){
+      this.name = name;
+      this.price = price;
+      this.type = type;
+      this.imgsrc = imgsrc;
+      this.qty = 1;
+      }
+
+      const l = [new Item("Chicken Biryani",250,"biryani","images/chicbiryani.jpg")];
+      l.push(new Item("Ice Lemon Tea", 60, "beverage", "images/lemontea.jpg"));
+      l.push(new Item("Butter Nons", 200, "Extras", "images/nons-.jpg"));
+      l.push(new Item("Cookies", 50, "dessert", "images/cookies.jpg"));
+      l.push(new Item("Fruit Salad", 120, "dessert", "images/salad.jpg"));
+      l.push(new Item("Capaccino", 50, "beverage", "images/coffee.jpg"));
+      l.push(new Item("Fish Biryani", 300, "biryani", "images/fishbiryani-.jpg"));
+      l.push(new Item("Macarons", 90, "dessert", "images/macaron.jpg"));
+      l.push(new Item("French Fries", 150, "extras", "images/frenchfries.jpg"));
+      l.push(new Item("PineApple Cool Cake", 100, "dessert", "images/pinecake.jpg"));
+      l.push(new Item("Vanilla Icecream", 80, "dessert", "images/butterscotch.jpg"));
+      l.push(new Item("Mutton Biryani", 350, "biryani", "images/muttonbiryani-.jpg"));
+
+
+      var t = "",mId = 1;
+      for (const j of l){
+        t = t + "<div id='"+mId+"' class='card type itemcolor' style='width: 12rem;' draggable='true'><img src='"+j.imgsrc+"' class='card-img-top'><div class='card-body'><h6 class='card-title'>"+j.name+"</h6><p class='card-text'>Rs."+j.price+"</p><p class='card-text' style='display: none;'>"+j.type+"</p></div></div>";
+        mId++;
+      }
+      document.getElementById("myMenu").innerHTML = t;
+
+      let k = 1;
+      while (k <= l.length){
+        document.getElementById(k).addEventListener('dragstart',dragStart)
+        k += 1;
+      }
+
+      function dragStart(e){
+        console.log("drag starts..");
+        e.dataTransfer.setData('text',e.target.id);
+        console.log(e.target.id);
+      }
+
+      tables = document.getElementsByClassName("card type tablecolor");
+
+      for (let table of tables){
+        table.addEventListener('dragenter',dragEnter);
+        table.addEventListener('dragover',dragOver);
+        table.addEventListener('dragleave',dragLeave);
+        table.addEventListener('drop',drop);
+      }
+      
+
+      function dragEnter(e){
+        e.preventDefault();
+        e.target.classList.add('drag-over');
+      }
+
+      function dragOver(e){
+        e.preventDefault();
+        e.target.classList.add('drag-over');
+      }
+
+      function dragLeave(e){
+        e.target.classList.remove('drag-over');
+      }
+
+      function drop(e){
+        e.target.classList.remove('drag-over');
+        const itemId = e.dataTransfer.getData('text');
+        let tableId = e.target.id;
+        if (sessionStorage.getItem(tableId)){
+          let array = JSON.parse(sessionStorage.getItem(tableId));
+          var flag = 0;
+          for(item of array){
+            if (item.name == l[itemId-1].name){
+              item.qty += 1;
+              flag = 1;
+              break;
+            }
+          }
+          if (flag == 0){
+            array.push(l[itemId-1]);
+          }
+           
+          sessionStorage.setItem(tableId,JSON.stringify(array));
+        }
+        else{
+          let array = [l[itemId-1]];
+          sessionStorage.setItem(tableId,JSON.stringify(array));
+          e.target.classList.remove('tablecolor');
+          e.target.classList.add('reservedcolor');
+        }
+        
+        console.log(sessionStorage.getItem(tableId));
+        // console.log(l[id-1].price);
+      }
+
+
+
+    function menuFunction() {
+      let input = document.getElementById('search-item').value
+      input=input.toLowerCase();
+      let x = document.getElementsByClassName("card type itemcolor")
+      
+      
+      for (i = 0; i < x.length; i++) { 
+          if (!x[i].innerHTML.toLowerCase().includes(input)) {
+            x[i].style.display="none";
+          }
+          else {
+            x[i].style.display="";                 
+          }
+      }
+    }
+
+  function tableFunction() {
+    let input = document.getElementById('search-table').value
+    input=input.toLowerCase();
+        
+    let x = document.getElementsByClassName("card type tablecolor");
+      
+      
+    for (i = 0; i < x.length; i++) { 
+        if (!x[i].innerHTML.toLowerCase().includes(input)) {
+            x[i].style.display="none";
+        }
+        else {
+            x[i].style.display="";                 
+        }
+
+    }      
+  }
+    
+
+    </script>
+</html>
